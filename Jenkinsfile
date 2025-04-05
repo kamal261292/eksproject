@@ -12,7 +12,7 @@ pipeline {
 
         stage('Clone') {
             steps {
-                git 'https://github.com/kamal261292/eksproject'
+                git 'https://github.com/kamal261292/eksproject.git'
             }
         }
 
