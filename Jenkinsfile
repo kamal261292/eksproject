@@ -10,9 +10,9 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
+        stage('Clone') {
             steps {
-                checkout scm
+                git 'https://github.com/kamal261292/eksproject'
             }
         }
 
@@ -26,7 +26,13 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'Dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'Dockerhub',
+                        usernameVariable: 'DOCKERHUB_USERNAME',
+                        passwordVariable: 'DOCKERHUB_PASSWORD'
+                    )
+                ]) {
                     sh """
                         echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
                         docker push ${IMAGE_NAME}:${TAG}
@@ -37,26 +43,31 @@ pipeline {
         }
 
         stage('Provision EKS with Terraform') {
-    steps {
-        dir('terraform') {
-            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWSID']]) {
-                withEnv(["AWS_DEFAULT_REGION=${env.AWS_REGION}"]) {
-                    sh '''
-                        terraform init
-                        terraform apply -auto-approve
-                    '''
+            steps {
+                dir('terraform') {
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWSID']
+                    ]) {
+                        withEnv(["AWS_DEFAULT_REGION=${env.AWS_REGION}"]) {
+                            sh '''
+                                terraform init
+                                terraform apply -auto-approve
+                            '''
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
 
         stage('Configure kubectl') {
             steps {
-                sh '''
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWSID']
+                ]) {
+                    sh '''
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
+                    '''
+                }
             }
         }
 
@@ -68,7 +79,6 @@ pipeline {
                 """
             }
         }
-
     }
 
     post {
