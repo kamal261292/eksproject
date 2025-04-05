@@ -19,10 +19,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${IMAGE_NAME}:${TAG}")
+                    sh "docker build -t ${IMAGE_NAME}:${TAG} ."
                 }
             }
         }
+
 
         stage('Push to DockerHub') {
             steps {
