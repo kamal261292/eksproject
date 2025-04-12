@@ -52,6 +52,7 @@ pipeline {
                         withEnv(["AWS_DEFAULT_REGION=${env.AWS_REGION}"]) {
                             sh '''
                                 terraform init
+                                terraform plan
                                 terraform apply -auto-approve
                             '''
                         }
