@@ -50,11 +50,9 @@ pipeline {
                         [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWSID']
                     ]) {
                         withEnv(["AWS_DEFAULT_REGION=${env.AWS_REGION}"]) {
-                            sh '''
-                                terraform init
-                                terraform plan
-                                terraform apply -auto-approve
-                            '''
+                            sh 'terraform init -no-color'
+                            sh 'terraform plan -no-color -out=tfplan'
+                            sh 'terraform apply -no-color -auto-approve tfplan'
                         }
                     }
                 }
